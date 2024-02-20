@@ -1,0 +1,12 @@
+{
+    "configurations": [
+      {
+        "name": "Debug Go Template",
+        "type": "go",
+        "request": "launch",
+        "mode": "debug",
+        "program": "${workspaceFolder}/cmd/main.go",
+        "cwd": "${workspaceFolder}"
+      }
+    ]
+  }
