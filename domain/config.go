@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -23,6 +24,7 @@ type ApplicationConfig struct {
 	TokenExpirationSeconds int    `mapstructure:"token_expiration_seconds" json:"tokenExpirationSeconds"`
 	AutoRefreshSeconds     int    `mapstructure:"auto_refresh_seconds" json:"autoRefreshSeconds"`
 	TokenName              string `mapstructure:"token_name" json:"tokenName"`
+	HashCost               int    `mapstructure:"hash_cost" json:"hashCost"`
 }
 
 const (
@@ -54,6 +56,7 @@ func newConfig() *ApplicationConfig {
 	v.SetDefault("secret_key", "")
 	v.SetDefault("app_name", "go-template")
 	v.SetDefault("token_name", "X-API-KEY")
+	v.SetDefault("hash_cost", 13)
 
 	one_day := time.Second * 60 * 60 * 24
 	v.SetDefault("login_expiration_seconds", one_day)
@@ -64,7 +67,12 @@ func newConfig() *ApplicationConfig {
 	fifteen_minutes := time.Second * 60 * 15
 	v.SetDefault("auto_refresh_seconds", fifteen_minutes)
 
-	v.SetConfigFile("go-template-config.json")
+	v.SetConfigName("go-template-config")
+	v.SetConfigType("json")
+
+	curr_dir, _ := os.Getwd()
+	v.AddConfigPath("../")
+	v.AddConfigPath(curr_dir)
 
 	v.SetEnvPrefix("go-template")
 	v.AutomaticEnv()

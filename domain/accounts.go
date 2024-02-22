@@ -6,13 +6,20 @@ import (
 )
 
 type Account struct {
-	ID     string `json:"id"`
-	Email  string `json:"email"`
-	Locked bool   `json:"-"`
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Locked   bool   `json:"-"`
+	Password string `json:"-"`
 }
 
 type AccountInput struct {
-	Email string `json:"email"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginInput struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type AccountRepo interface {
@@ -28,6 +35,7 @@ type AccountHandlers interface {
 	Add(account AccountInput) (Account, error)
 	ChangeStatus(id string, isLocked bool) error
 	Remove(id string) error
+	Login(credentials LoginInput) (Account, error)
 }
 
 type AccountNotFoundError struct {

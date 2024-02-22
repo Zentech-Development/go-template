@@ -1,6 +1,7 @@
 package bindings
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Zentech-Development/go-template/domain"
@@ -25,12 +26,6 @@ func requireAccessToken(c *gin.Context) {
 
 func handleUnauthorizedRequest(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-		"message": "User is not logged in",
-	})
-}
-
-func handleBadRequest(c *gin.Context) {
-	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-		"message": "Bad request",
+		"message": fmt.Sprintf("[Request ID: %s]: User is not logged in", c.GetString("requestId")),
 	})
 }

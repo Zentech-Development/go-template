@@ -4,6 +4,7 @@
     "app_name": "",                  // title-cased app name
 
     "secret_key": "",                // very long, very random
+    "hash_cost": 14,                 // hashing cost for hashed values like passwords
     "token_name": "",                // name for the cookie to set
 
     "login_expiration_seconds": 0,   // seconds before a user must re-login 

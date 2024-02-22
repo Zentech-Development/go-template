@@ -36,16 +36,25 @@ func setupMiddleware(app *gin.Engine) {
 }
 
 func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
-	app.Use(requireAccessToken)
-
-	_ = newAccountsBinding(handlers)
+	accountHandlers := newAccountsBinding(handlers)
 
 	app.GET("/", func(c *gin.Context) {
-		userId, _ := c.Get("userId")
 		c.JSON(http.StatusOK, gin.H{
-			"message": "User is logged in",
-			"userId":  userId,
+			"message": "Ok",
 		})
-		return
 	})
+	app.POST("/api/v1/login", accountHandlers.Login)
+	app.POST("/api/v1/accounts", accountHandlers.Create)
+
+	app.Use(requireAccessToken)
+
+	apiV1 := app.Group("/api/v1")
+	{
+		accountsRouter := apiV1.Group("/accounts")
+		{
+			accountsRouter.POST("/logout", accountHandlers.Logout)
+			accountsRouter.GET("/me", accountHandlers.GetMe)
+			accountsRouter.DELETE("/:id", accountHandlers.Delete)
+		}
+	}
 }

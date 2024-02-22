@@ -9,7 +9,7 @@ type Caches struct{}
 type Logger struct{}
 
 type Handlers struct {
-	// Accounts AccountHandlers
+	Accounts AccountHandlers
 }
 
 type Adapters struct {
