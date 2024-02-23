@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Zentech-Development/go-template/domain"
+	"github.com/Zentech-Development/go-template/public/pages"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -36,12 +37,22 @@ func setupMiddleware(app *gin.Engine) {
 }
 
 func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
+	app.Static("assets", "public/assets")
+	app.StaticFile("favicon.ico", "public/assets/favicon.png")
+
 	accountHandlers := newAccountsBinding(handlers)
 
 	app.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Ok",
-		})
+		if c.GetHeader("Accept") == "application/json" {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "Ok",
+			})
+			return
+		}
+
+		if err := pages.Home().Render(c, c.Writer); err != nil {
+			// TODO: not sure what I want here
+		}
 	})
 	app.POST("/api/v1/login", accountHandlers.Login)
 	app.POST("/api/v1/accounts", accountHandlers.Create)
