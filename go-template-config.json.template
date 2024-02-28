@@ -4,6 +4,8 @@
     "app_name": "",                  // title-cased app name
 
     "secret_key": "",                // very long, very random
+    "csrf_secret": "",               // very long, very random
+    "use_csrf_tokens": true          // true or false
     "hash_cost": 14,                 // hashing cost for hashed values like passwords
     "token_name": "",                // name for the cookie to set
 

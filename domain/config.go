@@ -2,6 +2,7 @@ package domain
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -19,6 +20,8 @@ type ApplicationConfig struct {
 	Lifecycle              string `mapstructure:"lifecycle"`
 	Host                   string `mapstructure:"host"`
 	SecretKey              string `mapstructure:"secret_key" json:"-"`
+	CSRFSecret             string `mapstructure:"csrf_secret" json:"-"`
+	UseCSRFTokens          bool   `mapstructure:"use_csrf_tokens" json:"true"`
 	AppName                string `mapstructure:"app_name" json:"appName"`
 	LoginExpirationSeconds int    `mapstructure:"login_expiration_seconds" json:"loginExpirationSeconds"`
 	TokenExpirationSeconds int    `mapstructure:"token_expiration_seconds" json:"tokenExpirationSeconds"`
@@ -51,21 +54,7 @@ func newConfig() *ApplicationConfig {
 
 	v := viper.New()
 
-	v.SetDefault("lifecycle", LIFECYCLE_PRODUCTION)
-	v.SetDefault("host", "localhost:8000")
-	v.SetDefault("secret_key", "")
-	v.SetDefault("app_name", "go-template")
-	v.SetDefault("token_name", "X-API-KEY")
-	v.SetDefault("hash_cost", 13)
-
-	one_day := time.Second * 60 * 60 * 24
-	v.SetDefault("login_expiration_seconds", one_day)
-
-	four_hours := time.Second * 60 * 60 * 4
-	v.SetDefault("token_expiration_seconds", four_hours)
-
-	fifteen_minutes := time.Second * 60 * 15
-	v.SetDefault("auto_refresh_seconds", fifteen_minutes)
+	setDefaults(v)
 
 	v.SetConfigName("go-template-config")
 	v.SetConfigType("json")
@@ -85,13 +74,8 @@ func newConfig() *ApplicationConfig {
 		log.Fatal("Invalid configuration: ", err)
 	}
 
-	var validLifecycles = []string{LIFECYCLE_DEVELOP, LIFECYCLE_LOCAL, LIFECYCLE_PRODUCTION}
-	if !slices.Contains(validLifecycles, config.Lifecycle) {
-		log.Fatalf("Invalid configuration: lifecycle must be one of (%s, %s, %s)", LIFECYCLE_DEVELOP, LIFECYCLE_LOCAL, LIFECYCLE_PRODUCTION)
-	}
-
-	if config.SecretKey == "" {
-		log.Fatal("Invalid configuration: must provide a secret_key")
+	if err := validateConfig(config); err != nil {
+		log.Fatal("Invalid configuration: ", err)
 	}
 
 	log.Default().Println("Application configuration initialized")
@@ -99,4 +83,41 @@ func newConfig() *ApplicationConfig {
 	log.Default().Println(string(vals))
 
 	return config
+}
+
+func setDefaults(v *viper.Viper) {
+	v.SetDefault("lifecycle", LIFECYCLE_PRODUCTION)
+	v.SetDefault("host", "localhost:8000")
+	v.SetDefault("secret_key", "")
+	v.SetDefault("csrf_secret", "")
+	v.SetDefault("use_csrf_tokens", true)
+	v.SetDefault("app_name", "go-template")
+	v.SetDefault("token_name", "X-API-KEY")
+	v.SetDefault("hash_cost", 13)
+
+	one_day := time.Second * 60 * 60 * 24
+	v.SetDefault("login_expiration_seconds", one_day)
+
+	four_hours := time.Second * 60 * 60 * 4
+	v.SetDefault("token_expiration_seconds", four_hours)
+
+	fifteen_minutes := time.Second * 60 * 15
+	v.SetDefault("auto_refresh_seconds", fifteen_minutes)
+}
+
+func validateConfig(config *ApplicationConfig) error {
+	var validLifecycles = []string{LIFECYCLE_DEVELOP, LIFECYCLE_LOCAL, LIFECYCLE_PRODUCTION}
+	if !slices.Contains(validLifecycles, config.Lifecycle) {
+		return fmt.Errorf("invalid configuration: lifecycle must be one of (%s, %s, %s)", LIFECYCLE_DEVELOP, LIFECYCLE_LOCAL, LIFECYCLE_PRODUCTION)
+	}
+
+	if config.SecretKey == "" {
+		return fmt.Errorf("invalid configuration: must provide a secret_key")
+	}
+
+	if config.UseCSRFTokens && config.CSRFSecret == "" {
+		return fmt.Errorf("invalid configuration: must provide a csrf_secret if use_csrf_tokens is true")
+	}
+
+	return nil
 }

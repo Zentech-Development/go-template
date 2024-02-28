@@ -5,8 +5,11 @@ import (
 
 	"github.com/Zentech-Development/go-template/domain"
 	"github.com/Zentech-Development/go-template/public/pages"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 func NewServerBinding(h *domain.Handlers, config *domain.ApplicationConfig) *gin.Engine {
@@ -16,24 +19,44 @@ func NewServerBinding(h *domain.Handlers, config *domain.ApplicationConfig) *gin
 		gin.SetMode(gin.DebugMode)
 	}
 
-	app := initializeApp()
-	setupMiddleware(app)
+	app := initializeApp(config.SecretKey, config.TokenName)
+	setupMiddleware(app, config.UseCSRFTokens, config.CSRFSecret)
 	setupEndpoints(app, h)
 
 	return app
 }
 
-func initializeApp() *gin.Engine {
+func initializeApp(secretKey string, cookieName string) *gin.Engine {
 	app := gin.Default()
 	app.SetTrustedProxies(nil)
+
+	store := cookie.NewStore([]byte(secretKey))
+	store.Options(sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	app.Use(sessions.Sessions(cookieName, store))
 
 	return app
 }
 
-func setupMiddleware(app *gin.Engine) {
+func setupMiddleware(app *gin.Engine, useCSRFTokens bool, csrfSecret string) {
 	app.Use(func(c *gin.Context) {
 		c.Set("requestId", uuid.NewString())
 	})
+
+	if useCSRFTokens {
+		app.Use(csrf.Middleware(csrf.Options{
+			Secret: csrfSecret,
+			ErrorFunc: func(c *gin.Context) {
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+					"message": "CSRF token missing",
+				})
+			},
+		}))
+	}
 }
 
 func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
@@ -43,27 +66,25 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 	accountHandlers := newAccountsBinding(handlers)
 
 	app.GET("/", func(c *gin.Context) {
-		if c.GetHeader("Accept") == "application/json" {
-			c.JSON(http.StatusOK, gin.H{
+		sendJSONOrHTML(
+			c,
+			http.StatusOK,
+			&gin.H{
 				"message": "Ok",
-			})
-			return
-		}
-
-		if err := pages.Home().Render(c, c.Writer); err != nil {
-			// TODO: not sure what I want here
-		}
+			},
+			pages.Home(),
+		)
 	})
 	app.POST("/api/v1/login", accountHandlers.Login)
 	app.POST("/api/v1/accounts", accountHandlers.Create)
-
-	app.Use(requireAccessToken)
+	app.GET("/login", accountHandlers.ViewLogin)
+	app.GET("/register", accountHandlers.ViewRegister)
 
 	apiV1 := app.Group("/api/v1")
 	{
 		accountsRouter := apiV1.Group("/accounts")
 		{
-			accountsRouter.POST("/logout", accountHandlers.Logout)
+			accountsRouter.GET("/logout", accountHandlers.Logout)
 			accountsRouter.GET("/me", accountHandlers.GetMe)
 			accountsRouter.DELETE("/:id", accountHandlers.Delete)
 		}

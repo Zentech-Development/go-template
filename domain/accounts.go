@@ -13,13 +13,14 @@ type Account struct {
 }
 
 type AccountInput struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Email           string `json:"email" form:"email" binding:"required"`
+	Password        string `json:"password" form:"password" binding:"required"`
+	ConfirmPassword string `json:"confirmPassword" form:"confirmPassword" binding:"required"`
 }
 
 type LoginInput struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" form:"email" binding:"required"`
+	Password string `json:"password" form:"password" binding:"required"`
 }
 
 type AccountRepo interface {

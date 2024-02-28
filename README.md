@@ -11,11 +11,12 @@ with your application's name.
 ## Running 
 1. Compile the templates
 ```sh
-templ generate -path=./public
+templ fmt ./public
+templ generate -path=./public -watch
 ```
 1. Compile the stylesheets
 ```sh
-tailwindcss -i ./public/styles/styles.css -o ./public/assets/styles.css
+tailwindcss -i ./public/styles/styles.css -o ./public/assets/styles.css --watch
 ```
 1. Run the API
 ```sh

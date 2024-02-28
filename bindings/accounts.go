@@ -3,10 +3,13 @@ package bindings
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Zentech-Development/go-template/domain"
+	"github.com/Zentech-Development/go-template/public/pages"
+	"github.com/a-h/templ"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 type AccountsBinding struct {
@@ -22,7 +25,7 @@ func newAccountsBinding(handlers *domain.Handlers) AccountsBinding {
 func (b AccountsBinding) Create(c *gin.Context) {
 	var accountInput domain.AccountInput
 
-	if err := c.ShouldBindJSON(&accountInput); err != nil {
+	if err := c.ShouldBind(&accountInput); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintf("[Request ID: %s]: Failed to parse request", c.GetString("requestId")),
 		})
@@ -37,16 +40,25 @@ func (b AccountsBinding) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": fmt.Sprintf("[Request ID: %s]: Added account successfully", c.GetString("requestId")),
-		"account": account,
-	})
+	session := sessions.Default(c)
+	session.Set("email", account.Email)
+	session.Save()
+
+	sendJSONOrRedirect(
+		c,
+		http.StatusCreated,
+		&gin.H{
+			"message": fmt.Sprintf("[Request ID: %s]: Added account successfully", c.GetString("requestId")),
+			"account": account,
+		},
+		"/",
+	)
 }
 
 func (b AccountsBinding) Login(c *gin.Context) {
 	var input domain.LoginInput
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": fmt.Sprintf("[Request ID: %s]: Failed to parse request", c.GetString("requestId")),
 		})
@@ -61,35 +73,34 @@ func (b AccountsBinding) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := generateAccessToken(
-		account.Email,
-		domain.GetConfig().TokenExpirationSeconds,
-		domain.GetConfig().AppName,
-		time.Now(),
-		domain.GetConfig().SecretKey,
-	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": fmt.Sprintf("[Request ID: %s]: Unexpected error while logging in: %s", c.GetString("requestId"), err.Error()),
-		})
-		return
-	}
-
-	c.SetCookie(domain.GetConfig().TokenName, token, domain.GetConfig().TokenExpirationSeconds*1000, "/", domain.GetConfig().Host, true, true)
+	session := sessions.Default(c)
+	session.Set("email", account.Email)
+	session.Save()
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintf("[Request ID: %s]: Login successful", c.GetString("requestId")),
-		"token":   token,
 		"account": account,
 	})
 }
 
 func (b AccountsBinding) Logout(c *gin.Context) {
-	c.SetCookie(domain.GetConfig().TokenName, "", 1, "/", domain.GetConfig().Host, true, true)
+	session := sessions.Default(c)
+	session.Clear()
+	session.Save()
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": fmt.Sprintf("[Request ID: %s]: Logout successful", c.GetString("requestId")),
-	})
+	c.Redirect(http.StatusTemporaryRedirect, "/")
+}
+
+func (b AccountsBinding) ViewLogin(c *gin.Context) {
+	csrfToken := csrf.GetToken(c)
+
+	_ = pages.Login(csrfToken).Render(c, c.Writer)
+}
+
+func (b AccountsBinding) ViewRegister(c *gin.Context) {
+	csrfToken := csrf.GetToken(c)
+
+	_ = pages.Register(csrfToken).Render(c, c.Writer)
 }
 
 func (b AccountsBinding) GetMe(c *gin.Context) {
@@ -100,4 +111,24 @@ func (b AccountsBinding) GetMe(c *gin.Context) {
 	})
 }
 
-func (b AccountsBinding) Delete(c *gin.Context) {}
+func (b AccountsBinding) Delete(c *gin.Context) {
+	c.AbortWithStatus(http.StatusNotImplemented)
+}
+
+func sendJSONOrHTML(c *gin.Context, status int, data *gin.H, template templ.Component) {
+	if c.GetHeader("Accept") == "application/json" {
+		c.JSON(status, &data)
+		return
+	}
+
+	template.Render(c, c.Writer)
+}
+
+func sendJSONOrRedirect(c *gin.Context, status int, data *gin.H, target string) {
+	if c.GetHeader("Accept") == "application/json" {
+		c.JSON(status, &data)
+		return
+	}
+
+	c.Redirect(http.StatusMovedPermanently, target)
+}
