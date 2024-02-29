@@ -65,6 +65,13 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 
 	accountHandlers := newAccountsBinding(handlers)
 
+	app.POST("/api/v1/login", accountHandlers.Login)
+	app.POST("/api/v1/accounts", accountHandlers.Create)
+	app.GET("/login", accountHandlers.ViewLogin)
+	app.GET("/register", accountHandlers.ViewRegister)
+
+	app.Use(requireLogin)
+
 	app.GET("/", func(c *gin.Context) {
 		sendJSONOrHTML(
 			c,
@@ -72,13 +79,9 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 			&gin.H{
 				"message": "Ok",
 			},
-			pages.Home(),
+			pages.Home(c.GetString("userId")),
 		)
 	})
-	app.POST("/api/v1/login", accountHandlers.Login)
-	app.POST("/api/v1/accounts", accountHandlers.Create)
-	app.GET("/login", accountHandlers.ViewLogin)
-	app.GET("/register", accountHandlers.ViewRegister)
 
 	apiV1 := app.Group("/api/v1")
 	{
@@ -89,4 +92,17 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 			accountsRouter.DELETE("/:id", accountHandlers.Delete)
 		}
 	}
+}
+
+func requireLogin(c *gin.Context) {
+	session := sessions.Default(c)
+	email := session.Get("email")
+
+	if email == nil || len(email.(string)) < 1 {
+		sendJSONOrRedirect(c, http.StatusUnauthorized, &gin.H{}, "/login")
+	}
+
+	c.Set("userId", email)
+
+	c.Next()
 }

@@ -77,10 +77,15 @@ func (b AccountsBinding) Login(c *gin.Context) {
 	session.Set("email", account.Email)
 	session.Save()
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": fmt.Sprintf("[Request ID: %s]: Login successful", c.GetString("requestId")),
-		"account": account,
-	})
+	sendJSONOrRedirect(
+		c,
+		http.StatusCreated,
+		&gin.H{
+			"message": fmt.Sprintf("[Request ID: %s]: Login successful", c.GetString("requestId")),
+			"account": account,
+		},
+		"/",
+	)
 }
 
 func (b AccountsBinding) Logout(c *gin.Context) {

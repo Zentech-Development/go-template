@@ -2,8 +2,8 @@ package pages
 
 import "github.com/Zentech-Development/go-template/public/components"
 
-templ Home() {
+templ Home(email string) {
 	@components.Base(true) {
-		<h1>Hello World</h1>
+		<h1>Hello { email }</h1>
 	}
 }
