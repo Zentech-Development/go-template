@@ -1,6 +1,7 @@
 package bindings
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Zentech-Development/go-template/domain"
@@ -45,18 +46,29 @@ func initializeApp(secretKey string, cookieName string) *gin.Engine {
 func setupMiddleware(app *gin.Engine, useCSRFTokens bool, csrfSecret string) {
 	app.Use(func(c *gin.Context) {
 		c.Set("requestId", uuid.NewString())
+		c.Next()
 	})
 
-	if useCSRFTokens {
-		app.Use(csrf.Middleware(csrf.Options{
-			Secret: csrfSecret,
-			ErrorFunc: func(c *gin.Context) {
-				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-					"message": "CSRF token missing",
-				})
-			},
-		}))
+	csrfIgnoreMethods := []string{"GET", "HEAD", "OPTIONS"}
+
+	if !useCSRFTokens {
+		csrfIgnoreMethods = append(csrfIgnoreMethods, "POST")
 	}
+
+	app.Use(csrf.Middleware(csrf.Options{
+		IgnoreMethods: csrfIgnoreMethods,
+		Secret:        csrfSecret,
+		ErrorFunc: func(c *gin.Context) {
+			sendJSONOrRedirect(
+				c,
+				http.StatusBadRequest,
+				&gin.H{
+					"message": fmt.Sprintf("[Request ID: %s]: CSRF token missing", c.GetString("requestId")),
+				},
+				URLs.Login,
+			)
+		},
+	}))
 }
 
 func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
@@ -70,7 +82,7 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 	app.GET("/login", accountHandlers.ViewLogin)
 	app.GET("/register", accountHandlers.ViewRegister)
 
-	app.Use(requireLogin)
+	app.Use(requireSession)
 
 	app.GET("/", func(c *gin.Context) {
 		sendJSONOrHTML(
@@ -92,17 +104,4 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 			accountsRouter.DELETE("/:id", accountHandlers.Delete)
 		}
 	}
-}
-
-func requireLogin(c *gin.Context) {
-	session := sessions.Default(c)
-	email := session.Get("email")
-
-	if email == nil || len(email.(string)) < 1 {
-		sendJSONOrRedirect(c, http.StatusUnauthorized, &gin.H{}, "/login")
-	}
-
-	c.Set("userId", email)
-
-	c.Next()
 }

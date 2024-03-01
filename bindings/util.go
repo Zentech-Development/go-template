@@ -1,31 +1,49 @@
 package bindings
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/Zentech-Development/go-template/domain"
+	"github.com/a-h/templ"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
-func requireAccessToken(c *gin.Context) {
-	token, err := c.Cookie(domain.GetConfig().TokenName)
-	if err != nil {
-		handleUnauthorizedRequest(c)
-		return
+func requireSession(c *gin.Context) {
+	session := sessions.Default(c)
+	id := session.Get("id")
+	email := session.Get("email")
+
+	if id == nil || email == nil || len(email.(string)) < 1 {
+		sendJSONOrRedirect(c, http.StatusUnauthorized, &gin.H{}, "/login")
 	}
 
-	claims, err := verifyAccessToken(token, domain.GetConfig().SecretKey, domain.GetConfig().AppName)
-	if err != nil {
-		handleUnauthorizedRequest(c)
-		return
-	}
+	c.Set("userId", id)
+	c.Set("userEmail", email)
 
-	c.Set("userId", claims.Subject)
+	c.Next()
 }
 
-func handleUnauthorizedRequest(c *gin.Context) {
-	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-		"message": fmt.Sprintf("[Request ID: %s]: User is not logged in", c.GetString("requestId")),
-	})
+func addSession(c *gin.Context, id string, email string) {
+	session := sessions.Default(c)
+	session.Set("id", id)
+	session.Set("email", email)
+	session.Save()
+}
+
+func sendJSONOrHTML(c *gin.Context, status int, data *gin.H, template templ.Component) {
+	if c.GetHeader("Accept") == "application/json" {
+		c.JSON(status, &data)
+		return
+	}
+
+	template.Render(c, c.Writer)
+}
+
+func sendJSONOrRedirect(c *gin.Context, status int, data *gin.H, target string) {
+	if c.GetHeader("Accept") == "application/json" {
+		c.JSON(status, &data)
+		return
+	}
+
+	c.Redirect(http.StatusMovedPermanently, target)
 }
