@@ -91,7 +91,7 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 			&gin.H{
 				"message": "Ok",
 			},
-			pages.Home(c.GetString("userId")),
+			pages.Home(c.GetString("userEmail")),
 		)
 	})
 
