@@ -65,7 +65,7 @@ func setupMiddleware(app *gin.Engine, useCSRFTokens bool, csrfSecret string) {
 				&gin.H{
 					"message": fmt.Sprintf("[Request ID: %s]: CSRF token missing", c.GetString("requestId")),
 				},
-				URLs.Login,
+				URLs.LoginPage,
 			)
 		},
 	}))
@@ -77,14 +77,18 @@ func setupEndpoints(app *gin.Engine, handlers *domain.Handlers) {
 
 	accountHandlers := newAccountsBinding(handlers)
 
+	app.GET(URLs.LandingPage, func(c *gin.Context) {
+		_ = pages.Landing().Render(c, c.Writer)
+	})
+	app.GET(URLs.LoginPage, accountHandlers.ViewLogin)
+	app.GET(URLs.RegisterPage, accountHandlers.ViewRegister)
+
 	app.POST("/api/v1/login", accountHandlers.Login)
 	app.POST("/api/v1/accounts", accountHandlers.Create)
-	app.GET("/login", accountHandlers.ViewLogin)
-	app.GET("/register", accountHandlers.ViewRegister)
 
 	app.Use(requireSession)
 
-	app.GET("/", func(c *gin.Context) {
+	app.GET(URLs.HomePage, func(c *gin.Context) {
 		sendJSONOrHTML(
 			c,
 			http.StatusOK,

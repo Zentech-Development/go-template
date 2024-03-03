@@ -1,13 +1,15 @@
 package bindings
 
 type ApplicationURLs struct {
-	Home     string
-	Login    string
-	Register string
+	LandingPage  string
+	HomePage     string
+	LoginPage    string
+	RegisterPage string
 }
 
 var URLs = ApplicationURLs{
-	Home:     "/",
-	Login:    "/login",
-	Register: "/register",
+	LandingPage:  "/",
+	HomePage:     "/home",
+	LoginPage:    "/login",
+	RegisterPage: "/register",
 }

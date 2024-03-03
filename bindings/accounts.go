@@ -51,7 +51,7 @@ func (b AccountsBinding) Create(c *gin.Context) {
 			"message": fmt.Sprintf("[Request ID: %s]: Added account successfully", c.GetString("requestId")),
 			"account": account,
 		},
-		URLs.Home,
+		URLs.HomePage,
 	)
 }
 
@@ -65,7 +65,7 @@ func (b AccountsBinding) Login(c *gin.Context) {
 			&gin.H{
 				"message": fmt.Sprintf("[Request ID: %s]: Failed to parse request", c.GetString("requestId")),
 			},
-			fmt.Sprintf("%s?login_failed=true", URLs.Login),
+			fmt.Sprintf("%s?login_failed=true", URLs.LoginPage),
 		)
 		return
 	}
@@ -78,7 +78,7 @@ func (b AccountsBinding) Login(c *gin.Context) {
 			&gin.H{
 				"message": fmt.Sprintf("[Request ID: %s]: Failed to login", c.GetString("requestId")),
 			},
-			fmt.Sprintf("%s?login_failed=true", URLs.Login),
+			fmt.Sprintf("%s?login_failed=true", URLs.LoginPage),
 		)
 		return
 	}
@@ -92,7 +92,7 @@ func (b AccountsBinding) Login(c *gin.Context) {
 			"message": fmt.Sprintf("[Request ID: %s]: Login successful", c.GetString("requestId")),
 			"account": account,
 		},
-		URLs.Home,
+		URLs.HomePage,
 	)
 }
 

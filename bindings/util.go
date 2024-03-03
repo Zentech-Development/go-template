@@ -45,5 +45,5 @@ func sendJSONOrRedirect(c *gin.Context, status int, data *gin.H, target string) 
 		return
 	}
 
-	c.Redirect(http.StatusMovedPermanently, target)
+	c.Redirect(http.StatusFound, target)
 }
