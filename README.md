@@ -21,3 +21,12 @@ of the application.
 Bindings define how the project can be interacted with by users. The binding bridges the gap between
 users and the business logic of the application. This could be a REST API, command line application,
 or anything else.
+
+
+## Usage
+1. Clone this project or use the "Use this Template" feature on GitHub
+1. Find and replace `APPNAME` with the correct application name
+1. Delete `go.mod` and `go.sum`
+1. Run `go mod init YOUR_MODULE_PATH`
+1. Find and replace `github.com/Zentech-Development/go-template` with your module path
+1. Run `go mod tidy`
