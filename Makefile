@@ -2,7 +2,7 @@ build:
 	go build -o ./APPNAME ./cmd/server/main.go
 
 run:
-	./APPNAME
+	./APPNAME -store=sqlite -binding=gin
 
 dev:
 	air

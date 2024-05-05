@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./tmp/server/APPNAME"
+  bin = "./tmp/server/APPNAME -store=sqlite -binding=gin"
   cmd = "go build -o ./tmp/server/APPNAME ./cmd/server/main.go"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
