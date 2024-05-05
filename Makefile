@@ -8,5 +8,5 @@ dev:
 	air
 
 clean:
-	rm ./APPNAME
+	rm -f ./APPNAME
 	rm -rf ./tmp
