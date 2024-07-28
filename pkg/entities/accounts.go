@@ -19,8 +19,8 @@ type AccountCreateInput struct {
 
 // AccountLoginInput represents valid input data for a login request.
 type AccountLoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 type AccountStore interface {

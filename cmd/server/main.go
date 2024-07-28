@@ -48,7 +48,13 @@ func getStores(storeType string) (entities.AccountStore, error) {
 func run(bindingType string, config *config.Config, services *service.Service) {
 	switch bindingType {
 	case BINDING_TYPE_GIN:
-		app := ginBinding.NewBinding(services, config.Host, config.Debug, config.SecretKey)
+		app := ginBinding.NewBinding(services, ginBinding.GinBindingOpts{
+			DebugMode:     config.Debug,
+			SecretKey:     config.SecretKey,
+			ListenAddr:    config.Host,
+			UseCSRFTokens: true,
+			CSRFSecret:    "TBD",
+		})
 		log.Fatal(app.Run())
 
 	default:
