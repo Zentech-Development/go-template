@@ -8,8 +8,7 @@ import (
 )
 
 type SQLiteStore struct {
-	DB       *sql.DB
-	Accounts *AccountStore
+	DB *sql.DB
 }
 
 func NewSQLiteStore(dbPath string) SQLiteStore {
@@ -18,11 +17,8 @@ func NewSQLiteStore(dbPath string) SQLiteStore {
 		log.Fatal(err)
 	}
 
-	accountStore := newAccountStore(db)
-
 	store := SQLiteStore{
-		DB:       db,
-		Accounts: accountStore,
+		DB: db,
 	}
 
 	return store

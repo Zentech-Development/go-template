@@ -38,7 +38,7 @@ func getStores(storeType string) (entities.AccountStore, error) {
 	switch storeType {
 	case STORE_TYPE_SQLITE:
 		sqliteStore := sqliteStore.NewSQLiteStore("./APPNAME.db")
-		return sqliteStore.Accounts, nil
+		return sqliteStore, nil
 
 	default:
 		return nil, errors.New("invalid store type, try ./APPNAME --help")

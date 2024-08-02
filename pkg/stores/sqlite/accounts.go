@@ -5,19 +5,13 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"errors"
-	"log"
 	"math"
 	"math/big"
 
 	"github.com/Zentech-Development/go-template/pkg/entities"
 )
 
-// AccountStore implements the entities.AccountStore interface using SQLite.
-type AccountStore struct {
-	db *sql.DB
-}
-
-func (s *AccountStore) createTables() error {
+func (s SQLiteStore) createTables() error {
 	createTableStatement := `
 	CREATE TABLE IF NOT EXISTS accounts (
 		id      INTEGER NOT NULL PRIMARY KEY, 
@@ -25,32 +19,18 @@ func (s *AccountStore) createTables() error {
 		password TEXT NOT NULL
 	);
 	`
-	_, err := s.db.Exec(createTableStatement)
+	_, err := s.DB.Exec(createTableStatement)
 	return err
-}
-
-func newAccountStore(db *sql.DB) *AccountStore {
-	accountStore := &AccountStore{
-		db: db,
-	}
-
-	if err := accountStore.createTables(); err != nil {
-		log.Fatal("Failed to create accounts table")
-	}
-
-	return &AccountStore{
-		db: db,
-	}
 }
 
 // GetUserByUsername retrieves a stored user by username. If the username is not found
 // or the database query fails, GetUserByUsername will return an error.
-func (s *AccountStore) GetByUsername(ctx context.Context, username string) (entities.Account, error) {
+func (s SQLiteStore) GetByUsername(ctx context.Context, username string) (entities.Account, error) {
 	query := `
 	SELECT id, password FROM accounts WHERE username = ?;
 	`
 
-	stmt, err := s.db.PrepareContext(ctx, query)
+	stmt, err := s.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return entities.Account{}, err
 	}
@@ -72,8 +52,8 @@ func (s *AccountStore) GetByUsername(ctx context.Context, username string) (enti
 }
 
 // Create inserts a new account into the database. It returns the inserted account or an error.
-func (s *AccountStore) Create(ctx context.Context, account entities.Account) (entities.Account, error) {
-	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
+func (s SQLiteStore) Create(ctx context.Context, account entities.Account) (entities.Account, error) {
+	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return entities.Account{}, err
 	}
