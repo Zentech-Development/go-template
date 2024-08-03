@@ -11,10 +11,11 @@ import (
 )
 
 type Config struct {
-	Host      string `mapstructure:"HOST" json:"HOST"`
-	Debug     bool   `mapstructure:"DEBUG" json:"DEBUG"`
-	SecretKey string `mapstructure:"SECRET_KEY" json:"-"`
-	Lifecycle string `mapstructure:"LIFECYCLE" json:"LIFECYCLE"`
+	Host          string `mapstructure:"HOST" json:"HOST"`
+	Debug         bool   `mapstructure:"DEBUG" json:"DEBUG"`
+	SecretKey     string `mapstructure:"SECRET_KEY" json:"-"`
+	SecretKeyFile string `mapstructure:"SECRET_KEY_FILE" json:"SECRET_KEY_FILE"`
+	Lifecycle     string `mapstructure:"LIFECYCLE" json:"LIFECYCLE"`
 }
 
 var (
@@ -71,24 +72,44 @@ func newConfig() *Config {
 		log.Fatal("Failed to parse configuration: ", err)
 	}
 
+	if err := conf.loadSecretsFromFiles(); err != nil {
+		log.Fatal("Failed to read secrets from files: ", err)
+	}
+
 	if err = conf.validate(); err != nil {
 		log.Fatal("Invalid configuration: ", err)
 	}
 
-	log.Default().Println("APPNAME configuration initialized")
+	log.Println("APPNAME configuration initialized")
 
 	vals, _ := json.MarshalIndent(conf, "", "\t")
 
 	if conf.Debug {
-		log.Default().Println(string(vals))
+		log.Println(string(vals))
 	}
 
 	return conf
 }
 
+func (c *Config) loadSecretsFromFiles() error {
+	if c.SecretKeyFile != "" {
+		if c.SecretKey != "" {
+			log.Println("WARNING: overwriting SECRET_KEY value from SECRET_KEY_FILE")
+		}
+		secretKey, err := os.ReadFile(c.SecretKeyFile)
+		if err != nil {
+			return err
+		}
+
+		c.SecretKey = string(secretKey)
+	}
+
+	return nil
+}
+
 func (c *Config) validate() error {
 	if c.SecretKey == "" {
-		return errors.New("must provide a SECRET_KEY")
+		return errors.New("must provide a SECRET_KEY or SECRET_KEY_FILE")
 	}
 
 	return nil
