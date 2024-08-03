@@ -17,6 +17,7 @@ func requireAuth(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+	c.Set(userKey, user)
 	c.Next()
 }
 

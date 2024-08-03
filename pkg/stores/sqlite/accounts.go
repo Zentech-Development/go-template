@@ -8,18 +8,6 @@ import (
 	"github.com/Zentech-Development/go-template/pkg/entities"
 )
 
-func (s SQLiteStore) createTables() error {
-	createTableStatement := `
-	CREATE TABLE IF NOT EXISTS accounts (
-		id       INTEGER NOT NULL PRIMARY KEY, 
-		username TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL
-	);
-	`
-	_, err := s.DB.Exec(createTableStatement)
-	return err
-}
-
 // GetUserByUsername retrieves a stored user by username. If the username is not found
 // or the database query fails, GetUserByUsername will return an error.
 func (s SQLiteStore) GetByUsername(ctx context.Context, username string) (entities.Account, error) {
@@ -44,6 +32,7 @@ func (s SQLiteStore) GetByUsername(ctx context.Context, username string) (entiti
 	}
 
 	return entities.Account{
+		ID:       id,
 		Username: username,
 		Password: password,
 	}, nil

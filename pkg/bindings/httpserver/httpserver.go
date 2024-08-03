@@ -63,9 +63,9 @@ func (b *HTTPServer) attachHandlers() {
 
 	b.app.POST("/api/v1/auth/login", b.handleLogin)
 	b.app.POST("/api/v1/auth/register", b.handleRegister)
-	b.app.GET("/api/v1/auth/logout", b.handleLogout)
 
 	b.app.Use(requireAuth)
 
+	b.app.GET("/api/v1/auth/logout", b.handleLogout)
 	b.app.GET("/api/v1/auth/me", b.handleAuthMe)
 }

@@ -37,7 +37,7 @@ func main() {
 func getStores(storeType string) (entities.AccountStore, error) {
 	switch storeType {
 	case STORE_TYPE_SQLITE:
-		sqliteStore := sqliteStore.NewSQLiteStore("./APPNAME.db")
+		sqliteStore := sqliteStore.NewSQLiteStore(&sqliteStore.Opts{DBPath: "./APPNAME.db", MigrationsPath: "file://pkg/stores/sqlite/migrations"})
 		return sqliteStore, nil
 
 	default:
@@ -60,5 +60,4 @@ func run(bindingType string, config *config.Config, services *service.Service) {
 	default:
 		log.Fatal("Invalid binding type, try ./APPNAME --help")
 	}
-
 }

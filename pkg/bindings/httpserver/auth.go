@@ -70,7 +70,6 @@ func (b *HTTPServer) handleRegister(c *gin.Context) {
 }
 
 func (b *HTTPServer) handleAuthMe(c *gin.Context) {
-	session := sessions.Default(c)
-	user := session.Get(userKey)
-	c.JSON(http.StatusOK, gin.H{"userID": user})
+	userID, _ := c.Get(userKey)
+	c.JSON(http.StatusOK, gin.H{"userID": userID})
 }
