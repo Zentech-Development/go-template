@@ -21,21 +21,45 @@ func (s SQLiteStore) GetByUsername(ctx context.Context, username string) (entiti
 	}
 	defer stmt.Close()
 
-	var id int64
-	var password string
+	account := &entities.Account{
+		Username: username,
+	}
 
-	if err = stmt.QueryRowContext(ctx, username).Scan(&id, &password); err != nil {
+	if err = stmt.QueryRowContext(ctx, username).Scan(&(account.ID), &(account.Password)); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entities.Account{}, &entities.ErrNotFound{}
 		}
 		return entities.Account{}, err
 	}
 
-	return entities.Account{
-		ID:       id,
-		Username: username,
-		Password: password,
-	}, nil
+	return *account, nil
+}
+
+// GetByID retrieves a stored acount by ID. If the ID is not found
+// or the database query fails, GetByID will return an error.
+func (s SQLiteStore) GetByID(ctx context.Context, id int64) (entities.Account, error) {
+	query := `
+	SELECT username, password FROM accounts WHERE id = ?;
+	`
+
+	stmt, err := s.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return entities.Account{}, err
+	}
+	defer stmt.Close()
+
+	account := &entities.Account{
+		ID: id,
+	}
+
+	if err = stmt.QueryRowContext(ctx, id).Scan(&(account.Username), &(account.Password)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.Account{}, &entities.ErrNotFound{}
+		}
+		return entities.Account{}, err
+	}
+
+	return *account, nil
 }
 
 // Create inserts a new account into the database. It returns the inserted account or an error.

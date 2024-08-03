@@ -54,7 +54,7 @@ func (b *HTTPServer) handleRegister(c *gin.Context) {
 		return
 	}
 
-	account, err := b.services.Create(c, input)
+	account, err := b.services.CreateAccount(c, input)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Failed to create account"})
 		return
@@ -71,5 +71,12 @@ func (b *HTTPServer) handleRegister(c *gin.Context) {
 
 func (b *HTTPServer) handleAuthMe(c *gin.Context) {
 	userID, _ := c.Get(userKey)
-	c.JSON(http.StatusOK, gin.H{"userID": userID})
+
+	account, err := b.services.GetAccountByID(c, userID.(int64))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Failed to retrieve current account info"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"account": account})
 }

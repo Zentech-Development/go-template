@@ -25,5 +25,6 @@ type AccountLoginInput struct {
 
 type AccountStore interface {
 	GetByUsername(ctx context.Context, username string) (Account, error)
+	GetByID(ctx context.Context, id int64) (Account, error)
 	Create(ctx context.Context, account AccountCreateInput) (Account, error)
 }

@@ -8,9 +8,9 @@ import (
 	"github.com/alexedwards/argon2id"
 )
 
-// GetUserByUsername retrieves a stored user by username. If the username is not
-// found or the account store call fails, an error will be returned,
-func (s *Service) GetUserByUsername(ctx context.Context, username string) (entities.Account, error) {
+// GetAccountByUsername retrieves a stored user by username. If the username is not
+// found or the account store call fails, an error will be returned.
+func (s *Service) GetAccountByUsername(ctx context.Context, username string) (entities.Account, error) {
 	account, err := s.accountStore.GetByUsername(ctx, username)
 	if err != nil {
 		return entities.Account{}, err
@@ -19,8 +19,19 @@ func (s *Service) GetUserByUsername(ctx context.Context, username string) (entit
 	return account, nil
 }
 
+// GetAccountByID retrieves a stored user by ID. If the ID is not
+// found or the account store call fails, an error will be returned.
+func (s *Service) GetAccountByID(ctx context.Context, id int64) (entities.Account, error) {
+	account, err := s.accountStore.GetByID(ctx, id)
+	if err != nil {
+		return entities.Account{}, err
+	}
+
+	return account, nil
+}
+
 // Create adds a new user to the database. If the username already exists an error will be returned.
-func (s *Service) Create(ctx context.Context, input entities.AccountCreateInput) (entities.Account, error) {
+func (s *Service) CreateAccount(ctx context.Context, input entities.AccountCreateInput) (entities.Account, error) {
 	_, err := s.accountStore.GetByUsername(ctx, input.Username)
 	if err == nil {
 		return entities.Account{}, &entities.ErrAlreadyExists{}
