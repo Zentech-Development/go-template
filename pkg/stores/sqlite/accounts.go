@@ -70,7 +70,7 @@ func (s SQLiteStore) Create(ctx context.Context, account entities.AccountCreateI
 	}
 
 	query := `
-	INSERT INTO accounts(username, password) VALUES (?, ?)
+	INSERT INTO accounts(username, password) VALUES (?, ?);
 	`
 
 	stmt, err := tx.PrepareContext(ctx, query)
