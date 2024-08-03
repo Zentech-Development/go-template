@@ -6,9 +6,9 @@ import (
 
 // Account represents a stored account.
 type Account struct {
+	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"-"`
-	IsAdmin  bool   `json:"isAdmin"`
 }
 
 // AccountCreateInput represents valid input data for creating an account.
@@ -25,5 +25,5 @@ type AccountLoginInput struct {
 
 type AccountStore interface {
 	GetByUsername(ctx context.Context, username string) (Account, error)
-	Create(ctx context.Context, account Account) (Account, error)
+	Create(ctx context.Context, account AccountCreateInput) (Account, error)
 }

@@ -54,8 +54,6 @@ func newConfig() *Config {
 	v.SetDefault("DEBUG", false)
 
 	v.SetConfigName("APPNAME-config")
-	v.AddConfigPath("/etc/APPNAME")
-	v.AddConfigPath("$HOME/.APPNAME")
 
 	projectDir, err := os.Getwd()
 	if err != nil {

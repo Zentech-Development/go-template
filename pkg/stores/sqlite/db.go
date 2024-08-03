@@ -21,5 +21,9 @@ func NewSQLiteStore(dbPath string) SQLiteStore {
 		DB: db,
 	}
 
+	if err := store.createTables(); err != nil {
+		log.Fatalf("Failed to create accounts table %w\n", err)
+	}
+
 	return store
 }

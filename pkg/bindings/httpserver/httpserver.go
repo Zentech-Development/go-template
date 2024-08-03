@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GinBindingOpts struct {
+type HTTPServerOpts struct {
 	DebugMode     bool
 	SecretKey     string
 	ListenAddr    string
@@ -15,18 +15,18 @@ type GinBindingOpts struct {
 	CSRFSecret    string
 }
 
-// GinBinding represents a Gin application bound to services.
-type GinBinding struct {
-	opts    GinBindingOpts
-	service *service.Service
-	app     *gin.Engine
+// HTTPServer represents a Gin application bound to services.
+type HTTPServer struct {
+	opts     HTTPServerOpts
+	services *service.Service
+	app      *gin.Engine
 }
 
 // NewBinding initializes an instance of GinBinding with the provided values.
-func NewBinding(services *service.Service, opts GinBindingOpts) *GinBinding {
-	ginBinding := &GinBinding{
-		service: services,
-		opts:    opts,
+func NewBinding(services *service.Service, opts HTTPServerOpts) *HTTPServer {
+	ginBinding := &HTTPServer{
+		services: services,
+		opts:     opts,
 	}
 
 	if opts.DebugMode {
@@ -51,21 +51,21 @@ func NewBinding(services *service.Service, opts GinBindingOpts) *GinBinding {
 }
 
 // Run starts the application with the provided configuration.
-func (b *GinBinding) Run() error {
+func (b *HTTPServer) Run() error {
 	return b.app.Run(b.opts.ListenAddr)
 }
 
 // attachHandlers adds the handlers to the underlying Gin app.
-func (b *GinBinding) attachHandlers() {
+func (b *HTTPServer) attachHandlers() {
 	b.app.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 
-	b.app.POST("/api/v1/auth/login", handleLogin)
-	b.app.POST("/api/v1/auth/register")
-	b.app.GET("/api/v1/auth/logout", handleLogout)
+	b.app.POST("/api/v1/auth/login", b.handleLogin)
+	b.app.POST("/api/v1/auth/register", b.handleRegister)
+	b.app.GET("/api/v1/auth/logout", b.handleLogout)
 
 	b.app.Use(requireAuth)
 
-	b.app.GET("/api/v1/auth/me", handleAuthMe)
+	b.app.GET("/api/v1/auth/me", b.handleAuthMe)
 }

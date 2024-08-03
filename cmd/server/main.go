@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 
-	ginBinding "github.com/Zentech-Development/go-template/pkg/bindings/gin"
+	httpserver "github.com/Zentech-Development/go-template/pkg/bindings/httpserver"
 	"github.com/Zentech-Development/go-template/pkg/config"
 	"github.com/Zentech-Development/go-template/pkg/entities"
 	"github.com/Zentech-Development/go-template/pkg/service"
@@ -48,7 +48,7 @@ func getStores(storeType string) (entities.AccountStore, error) {
 func run(bindingType string, config *config.Config, services *service.Service) {
 	switch bindingType {
 	case BINDING_TYPE_GIN:
-		app := ginBinding.NewBinding(services, ginBinding.GinBindingOpts{
+		app := httpserver.NewBinding(services, httpserver.HTTPServerOpts{
 			DebugMode:     config.Debug,
 			SecretKey:     config.SecretKey,
 			ListenAddr:    config.Host,

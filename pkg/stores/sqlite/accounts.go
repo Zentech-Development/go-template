@@ -2,11 +2,8 @@ package sqlitestore
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
 	"errors"
-	"math"
-	"math/big"
 
 	"github.com/Zentech-Development/go-template/pkg/entities"
 )
@@ -14,7 +11,7 @@ import (
 func (s SQLiteStore) createTables() error {
 	createTableStatement := `
 	CREATE TABLE IF NOT EXISTS accounts (
-		id      INTEGER NOT NULL PRIMARY KEY, 
+		id       INTEGER NOT NULL PRIMARY KEY, 
 		username TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL
 	);
@@ -38,33 +35,29 @@ func (s SQLiteStore) GetByUsername(ctx context.Context, username string) (entiti
 
 	var id int64
 	var password string
-	var isAdmin bool
 
-	if err = stmt.QueryRowContext(ctx, username).Scan(&id, &password, &isAdmin); err != nil {
+	if err = stmt.QueryRowContext(ctx, username).Scan(&id, &password); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entities.Account{}, &entities.ErrNotFound{}
+		}
 		return entities.Account{}, err
 	}
 
 	return entities.Account{
 		Username: username,
 		Password: password,
-		IsAdmin:  isAdmin,
 	}, nil
 }
 
 // Create inserts a new account into the database. It returns the inserted account or an error.
-func (s SQLiteStore) Create(ctx context.Context, account entities.Account) (entities.Account, error) {
+func (s SQLiteStore) Create(ctx context.Context, account entities.AccountCreateInput) (entities.Account, error) {
 	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return entities.Account{}, err
 	}
 
-	id, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
-	if err != nil {
-		return entities.Account{}, err
-	}
-
 	query := `
-	INSERT INTO accounts(id, username, password, is_admin) VALUES (?, ?, ?, ?)
+	INSERT INTO accounts(username, password) VALUES (?, ?)
 	`
 
 	stmt, err := tx.PrepareContext(ctx, query)
@@ -73,7 +66,7 @@ func (s SQLiteStore) Create(ctx context.Context, account entities.Account) (enti
 	}
 	defer stmt.Close()
 
-	result, err := stmt.ExecContext(ctx, id, account.Username, account.Password, false)
+	result, err := stmt.ExecContext(ctx, account.Username, account.Password)
 	if err != nil {
 		return entities.Account{}, err
 	}
@@ -87,9 +80,20 @@ func (s SQLiteStore) Create(ctx context.Context, account entities.Account) (enti
 		return entities.Account{}, errors.New("failed to insert account")
 	}
 
+	newAccountID, err := result.LastInsertId()
+	if err != nil {
+		return entities.Account{}, err
+	}
+
 	if err = tx.Commit(); err != nil {
 		return entities.Account{}, err
 	}
 
-	return account, nil
+	savedAccount := entities.Account{
+		ID:       newAccountID,
+		Username: account.Username,
+		Password: account.Password,
+	}
+
+	return savedAccount, nil
 }
