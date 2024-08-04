@@ -33,7 +33,7 @@ func main() {
 
 	config.Init(*configFile)
 
-	accountStore, err := getStores(*storeType)
+	accountStore, err := getStores(*storeType, config.C)
 	if err != nil {
 		logger.L.Fatal().Err(err).Msg("Store initialization failed")
 	}
@@ -43,10 +43,13 @@ func main() {
 	run(*bindingType, config.C, services)
 }
 
-func getStores(storeType string) (entities.AccountStore, error) {
+func getStores(storeType string, c *config.Config) (entities.AccountStore, error) {
 	switch storeType {
 	case STORE_TYPE_SQLITE:
-		sqliteStore := sqliteStore.NewSQLiteStore(&sqliteStore.Opts{DBPath: "./APPNAME.db", MigrationsPath: "file://pkg/stores/sqlite/migrations"})
+		sqliteStore := sqliteStore.NewSQLiteStore(&sqliteStore.Opts{
+			DBPath:         c.SQLiteOpts.DBPath,
+			MigrationsPath: c.SQLiteOpts.MigrationsDir,
+		})
 		return sqliteStore, nil
 
 	default:
@@ -54,15 +57,13 @@ func getStores(storeType string) (entities.AccountStore, error) {
 	}
 }
 
-func run(bindingType string, config *config.Config, services *service.Service) {
+func run(bindingType string, c *config.Config, services *service.Service) {
 	switch bindingType {
 	case BINDING_TYPE_GIN:
 		app := httpserver.NewBinding(services, httpserver.HTTPServerOpts{
-			DebugMode:     config.Debug,
-			SecretKey:     config.SecretKey,
-			ListenAddr:    config.Host,
-			UseCSRFTokens: true,
-			CSRFSecret:    "TBD",
+			DebugMode:  c.Debug,
+			SecretKey:  c.SecretKey,
+			ListenAddr: c.Host,
 		})
 		logger.L.Fatal().Err(app.Run()).Msg("Application crashed")
 

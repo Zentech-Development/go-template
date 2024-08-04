@@ -1,6 +1,9 @@
 {
-    "HOST": "127.0.0.1:8080",
+    "HOST": "127.0.0.1:8000",
     "SECRET_KEY": "",
     "DEBUG": true,
-    "LIFECYCLE": "local"
+    "SQLITE_OPTS": {
+        "DB_PATH": "./APPNAME.db",
+        "MIGRATIONS_DIR": "file://pkg/stores/sqlite/migrations"
+    }
 }

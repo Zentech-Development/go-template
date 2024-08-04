@@ -12,10 +12,16 @@ import (
 var C *Config
 
 type Config struct {
-	Host          string `mapstructure:"HOST" json:"HOST"`
-	Debug         bool   `mapstructure:"DEBUG" json:"DEBUG"`
-	SecretKey     string `mapstructure:"SECRET_KEY" json:"-"`
-	SecretKeyFile string `mapstructure:"SECRET_KEY_FILE" json:"SECRET_KEY_FILE"`
+	Host          string     `mapstructure:"HOST" json:"HOST"`
+	Debug         bool       `mapstructure:"DEBUG" json:"DEBUG"`
+	SecretKey     string     `mapstructure:"SECRET_KEY" json:"-"`
+	SecretKeyFile string     `mapstructure:"SECRET_KEY_FILE" json:"SECRET_KEY_FILE"`
+	SQLiteOpts    SQLiteOpts `mapstructure:"SQLITE_OPTS" json:"SQLITE_OPTS"`
+}
+
+type SQLiteOpts struct {
+	DBPath        string `mapstructure:"DB_PATH" json:"DB_PATH"`
+	MigrationsDir string `mapstructure:"MIGRATIONS_DIR" json:"MIGRATIONS_DIR"`
 }
 
 func Init(configFilePath string) {

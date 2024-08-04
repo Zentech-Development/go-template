@@ -21,6 +21,10 @@ type Opts struct {
 }
 
 func NewSQLiteStore(opts *Opts) SQLiteStore {
+	if opts.DBPath == "" || opts.MigrationsPath == "" {
+		logger.L.Fatal().Msg("Missing required SQLITE_OPTS in config")
+	}
+
 	db, err := sql.Open("sqlite3", opts.DBPath)
 	if err != nil {
 		logger.L.Fatal().Err(err)

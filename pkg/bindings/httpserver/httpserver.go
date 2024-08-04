@@ -8,11 +8,9 @@ import (
 )
 
 type HTTPServerOpts struct {
-	DebugMode     bool
-	SecretKey     string
-	ListenAddr    string
-	UseCSRFTokens bool
-	CSRFSecret    string
+	DebugMode  bool
+	SecretKey  string
+	ListenAddr string
 }
 
 // HTTPServer represents a Gin application bound to services.
