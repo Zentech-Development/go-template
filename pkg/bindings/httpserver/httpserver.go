@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Zentech-Development/go-template/pkg/service"
+	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,6 +39,17 @@ func NewBinding(services *service.Service, opts HTTPServerOpts) *HTTPServer {
 
 	app.Use(gin.Recovery())
 	app.Use(gin.Logger())
+
+	app.Use(secure.Secure(secure.Options{
+		// AllowedHosts:          []string{"example.com", "ssl.example.com"},
+		SSLRedirect:           !opts.DebugMode,
+		STSSeconds:            315360000,
+		STSIncludeSubdomains:  true,
+		FrameDeny:             true,
+		ContentTypeNosniff:    true,
+		BrowserXssFilter:      true,
+		ContentSecurityPolicy: "default-src 'self'",
+	}))
 
 	app.Use(getCookieSessionMiddleware(opts.SecretKey))
 
