@@ -30,3 +30,5 @@ APPNAME-config*
 APPNAME.db
 
 __debug*
+
+.vscode
