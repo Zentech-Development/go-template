@@ -3,7 +3,7 @@ package ginbinding
 import (
 	"net/http"
 
-	"github.com/Zentech-Development/go-template/pkg/entities"
+	"github.com/Zentech-Development/go-template/internals/entities"
 	"github.com/Zentech-Development/go-template/pkg/logger"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"

@@ -1,16 +1,16 @@
-package service
+package services
 
 import (
 	"context"
 	"errors"
 
-	"github.com/Zentech-Development/go-template/pkg/entities"
+	"github.com/Zentech-Development/go-template/internals/entities"
 	"github.com/alexedwards/argon2id"
 )
 
 // GetAccountByUsername retrieves a stored user by username. If the username is not
 // found or the account store call fails, an error will be returned.
-func (s *Service) GetAccountByUsername(ctx context.Context, username string) (entities.Account, error) {
+func (s *Services) GetAccountByUsername(ctx context.Context, username string) (entities.Account, error) {
 	account, err := s.accountStore.GetByUsername(ctx, username)
 	if err != nil {
 		return entities.Account{}, err
@@ -21,7 +21,7 @@ func (s *Service) GetAccountByUsername(ctx context.Context, username string) (en
 
 // GetAccountByID retrieves a stored user by ID. If the ID is not
 // found or the account store call fails, an error will be returned.
-func (s *Service) GetAccountByID(ctx context.Context, id int64) (entities.Account, error) {
+func (s *Services) GetAccountByID(ctx context.Context, id int64) (entities.Account, error) {
 	account, err := s.accountStore.GetByID(ctx, id)
 	if err != nil {
 		return entities.Account{}, err
@@ -31,7 +31,7 @@ func (s *Service) GetAccountByID(ctx context.Context, id int64) (entities.Accoun
 }
 
 // Create adds a new user to the database. If the username already exists an error will be returned.
-func (s *Service) CreateAccount(ctx context.Context, input entities.AccountCreateInput) (entities.Account, error) {
+func (s *Services) CreateAccount(ctx context.Context, input entities.AccountCreateInput) (entities.Account, error) {
 	_, err := s.accountStore.GetByUsername(ctx, input.Username)
 	if err == nil {
 		return entities.Account{}, &entities.ErrAlreadyExists{}
@@ -57,7 +57,7 @@ func (s *Service) CreateAccount(ctx context.Context, input entities.AccountCreat
 
 // Login checks the provided input against accounts and returns an error if the credentials
 // are not valid.
-func (s *Service) Login(ctx context.Context, input entities.AccountLoginInput) (entities.Account, error) {
+func (s *Services) Login(ctx context.Context, input entities.AccountLoginInput) (entities.Account, error) {
 	savedAccount, err := s.accountStore.GetByUsername(ctx, input.Username)
 	if err != nil {
 		return entities.Account{}, &entities.ErrBadCredentials{}

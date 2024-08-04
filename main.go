@@ -4,12 +4,12 @@ import (
 	"errors"
 	"flag"
 
-	httpserver "github.com/Zentech-Development/go-template/pkg/bindings/httpserver"
+	httpserver "github.com/Zentech-Development/go-template/internals/bindings/httpserver"
+	"github.com/Zentech-Development/go-template/internals/entities"
+	"github.com/Zentech-Development/go-template/internals/services"
+	sqliteStore "github.com/Zentech-Development/go-template/internals/stores/sqlite"
 	"github.com/Zentech-Development/go-template/pkg/config"
-	"github.com/Zentech-Development/go-template/pkg/entities"
 	"github.com/Zentech-Development/go-template/pkg/logger"
-	"github.com/Zentech-Development/go-template/pkg/service"
-	sqliteStore "github.com/Zentech-Development/go-template/pkg/stores/sqlite"
 	"github.com/rs/zerolog"
 )
 
@@ -38,9 +38,9 @@ func main() {
 		logger.L.Fatal().Err(err).Msg("Store initialization failed")
 	}
 
-	services := service.NewService(accountStore)
+	s := services.NewService(accountStore)
 
-	run(*bindingType, config.C, services)
+	run(*bindingType, config.C, s)
 }
 
 func getStores(storeType string, c *config.Config) (entities.AccountStore, error) {
@@ -57,10 +57,10 @@ func getStores(storeType string, c *config.Config) (entities.AccountStore, error
 	}
 }
 
-func run(bindingType string, c *config.Config, services *service.Service) {
+func run(bindingType string, c *config.Config, s *services.Services) {
 	switch bindingType {
 	case BINDING_TYPE_GIN:
-		app := httpserver.NewBinding(services, httpserver.HTTPServerOpts{
+		app := httpserver.NewBinding(s, httpserver.HTTPServerOpts{
 			DebugMode:  c.Debug,
 			SecretKey:  c.SecretKey,
 			ListenAddr: c.Host,

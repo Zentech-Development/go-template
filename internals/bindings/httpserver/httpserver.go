@@ -3,7 +3,7 @@ package ginbinding
 import (
 	"net/http"
 
-	"github.com/Zentech-Development/go-template/pkg/service"
+	"github.com/Zentech-Development/go-template/internals/services"
 	"github.com/gin-gonic/contrib/secure"
 	"github.com/gin-gonic/gin"
 )
@@ -17,14 +17,14 @@ type HTTPServerOpts struct {
 // HTTPServer represents a Gin application bound to services.
 type HTTPServer struct {
 	opts     HTTPServerOpts
-	services *service.Service
+	services *services.Services
 	app      *gin.Engine
 }
 
 // NewBinding initializes an instance of GinBinding with the provided values.
-func NewBinding(services *service.Service, opts HTTPServerOpts) *HTTPServer {
+func NewBinding(s *services.Services, opts HTTPServerOpts) *HTTPServer {
 	ginBinding := &HTTPServer{
-		services: services,
+		services: s,
 		opts:     opts,
 	}
 

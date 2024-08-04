@@ -1,5 +1,5 @@
 build:
-	go build -o ./APPNAME ./cmd/server/main.go
+	go build -o ./APPNAME ./main.go
 
 dev:
 	air

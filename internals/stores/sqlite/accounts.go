@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/Zentech-Development/go-template/pkg/entities"
+	"github.com/Zentech-Development/go-template/internals/entities"
 )
 
 // GetUserByUsername retrieves a stored user by username. If the username is not found
