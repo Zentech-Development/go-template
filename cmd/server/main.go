@@ -3,13 +3,14 @@ package main
 import (
 	"errors"
 	"flag"
-	"log"
 
 	httpserver "github.com/Zentech-Development/go-template/pkg/bindings/httpserver"
 	"github.com/Zentech-Development/go-template/pkg/config"
 	"github.com/Zentech-Development/go-template/pkg/entities"
+	"github.com/Zentech-Development/go-template/pkg/logger"
 	"github.com/Zentech-Development/go-template/pkg/service"
 	sqliteStore "github.com/Zentech-Development/go-template/pkg/stores/sqlite"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -18,20 +19,28 @@ const (
 )
 
 func main() {
-	config := config.GetConfig()
-
 	storeType := flag.String("store", STORE_TYPE_SQLITE, "the type of store to use, allowed values: sqlite")
 	bindingType := flag.String("binding", BINDING_TYPE_GIN, "the type of binding to use, allowed values: gin")
+	logLevel := flag.Int("log", int(zerolog.DebugLevel), "the zerolog log level to use, allowed values: 0, 1, 2, 3, 4, 5, default is 0 (debug)")
+	configFile := flag.String("config", "./APPNAME-config.json", "the path to the config file, default is ./APPNAME-config.json")
 	flag.Parse()
+
+	logOpts := logger.Opts{
+		Level:      zerolog.Level(*logLevel),
+		TimeFormat: zerolog.TimeFormatUnix,
+	}
+	logger.InitLogger(logOpts)
+
+	config.Init(*configFile)
 
 	accountStore, err := getStores(*storeType)
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Fatal().Err(err).Msg("Store initialization failed")
 	}
 
 	services := service.NewService(accountStore)
 
-	run(*bindingType, config, services)
+	run(*bindingType, config.C, services)
 }
 
 func getStores(storeType string) (entities.AccountStore, error) {
@@ -55,9 +64,9 @@ func run(bindingType string, config *config.Config, services *service.Service) {
 			UseCSRFTokens: true,
 			CSRFSecret:    "TBD",
 		})
-		log.Fatal(app.Run())
+		logger.L.Fatal().Err(app.Run()).Msg("Application crashed")
 
 	default:
-		log.Fatal("Invalid binding type, try ./APPNAME --help")
+		logger.L.Fatal().Msg("Invalid binding type, try ./APPNAME --help")
 	}
 }

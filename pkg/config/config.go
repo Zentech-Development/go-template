@@ -3,98 +3,57 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
-	"sync"
 
+	"github.com/Zentech-Development/go-template/pkg/logger"
 	"github.com/spf13/viper"
 )
+
+var C *Config
 
 type Config struct {
 	Host          string `mapstructure:"HOST" json:"HOST"`
 	Debug         bool   `mapstructure:"DEBUG" json:"DEBUG"`
 	SecretKey     string `mapstructure:"SECRET_KEY" json:"-"`
 	SecretKeyFile string `mapstructure:"SECRET_KEY_FILE" json:"SECRET_KEY_FILE"`
-	Lifecycle     string `mapstructure:"LIFECYCLE" json:"LIFECYCLE"`
 }
 
-var (
-	activeConfig *Config
-	lock         = &sync.Mutex{}
-)
+func Init(configFilePath string) {
+	logger.L.Info().Msgf("Initializing config from file %s", configFilePath)
 
-const (
-	LIFECYCLE_PRODUCTION = "prod"
-	LIFECYCLE_DEVELOP    = "dev"
-	LIFECYCLE_LOCAL      = "local"
-)
-
-func GetConfig() *Config {
-	// extra check here to avoid using the (very expensive) lock whenever possible
-	if activeConfig == nil {
-		lock.Lock()
-		defer lock.Unlock()
-
-		if activeConfig == nil {
-			activeConfig = newConfig()
-		}
-	}
-
-	return activeConfig
-}
-
-func newConfig() *Config {
-	conf := &Config{}
+	C = &Config{}
 
 	v := viper.New()
 
-	v.SetEnvPrefix("APPNAME")
-
 	v.SetDefault("HOST", "localhost:8000")
-	v.SetDefault("LIFECYCLE", LIFECYCLE_PRODUCTION)
 	v.SetDefault("DEBUG", false)
 
-	v.SetConfigName("APPNAME-config")
-
-	projectDir, err := os.Getwd()
-	if err != nil {
-		log.Fatal("Somehow failed to get the working directory")
-	}
-	v.AddConfigPath(projectDir)
-
-	v.AutomaticEnv()
+	v.SetConfigFile(configFilePath)
 
 	if err := v.ReadInConfig(); err != nil {
-		log.Fatal("Failed to load the configuration: ", err)
+		logger.L.Fatal().Err(err).Msgf("Failed to load config file: %s", configFilePath)
 	}
 
-	if err := v.Unmarshal(conf); err != nil {
-		log.Fatal("Failed to parse configuration: ", err)
+	if err := v.Unmarshal(C); err != nil {
+		logger.L.Fatal().Err(err).Msgf("Failed to parse configuration: %s", configFilePath)
 	}
 
-	if err := conf.loadSecretsFromFiles(); err != nil {
-		log.Fatal("Failed to read secrets from files: ", err)
+	if err := C.loadSecretsFromFiles(); err != nil {
+		logger.L.Fatal().Err(err).Msgf("Failed to read secrets from files: %s", configFilePath)
 	}
 
-	if err = conf.validate(); err != nil {
-		log.Fatal("Invalid configuration: ", err)
+	if err := C.validate(); err != nil {
+		logger.L.Fatal().Err(err).Msgf("Invalid configuration: %s", configFilePath)
 	}
 
-	log.Println("APPNAME configuration initialized")
-
-	vals, _ := json.MarshalIndent(conf, "", "\t")
-
-	if conf.Debug {
-		log.Println(string(vals))
-	}
-
-	return conf
+	vals, _ := json.MarshalIndent(C, "", "\t")
+	logger.L.Info().RawJSON("config", vals).Msg("APPNAME configuration initialized successfully")
 }
 
 func (c *Config) loadSecretsFromFiles() error {
 	if c.SecretKeyFile != "" {
 		if c.SecretKey != "" {
-			log.Println("WARNING: overwriting SECRET_KEY value from SECRET_KEY_FILE")
+			logger.L.Warn().Msg("WARNING: overwriting SECRET_KEY value from SECRET_KEY_FILE")
 		}
 		secretKey, err := os.ReadFile(c.SecretKeyFile)
 		if err != nil {

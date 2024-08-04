@@ -3,8 +3,8 @@ package sqlitestore
 import (
 	"database/sql"
 	"errors"
-	"log"
 
+	"github.com/Zentech-Development/go-template/pkg/logger"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -23,7 +23,7 @@ type Opts struct {
 func NewSQLiteStore(opts *Opts) SQLiteStore {
 	db, err := sql.Open("sqlite3", opts.DBPath)
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Fatal().Err(err)
 	}
 
 	store := SQLiteStore{
@@ -32,22 +32,26 @@ func NewSQLiteStore(opts *Opts) SQLiteStore {
 
 	migrationDriver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Fatal().Err(err)
 	}
 	migrator, err := migrate.NewWithDatabaseInstance(opts.MigrationsPath, "sqlite3", migrationDriver)
 	if err != nil {
-		log.Fatal(err)
+		logger.L.Fatal().Err(err)
 	}
 
 	if err = migrator.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
-			log.Println("SQLite migrations made no changes")
+			logger.L.Info().Msg("SQLite migrations made no changes")
 		} else {
-			log.Fatal("SQLite migrations failed: ", err)
+			logger.L.Fatal().Err(err).Msg("SQLite migrations failed")
 		}
 	}
 
-	log.Println("SQLite database connected and migrated successfully")
+	if err := db.Ping(); err != nil {
+		logger.L.Fatal().Err(err).Msg("SQLite connection failed")
+	}
+
+	logger.L.Info().Msg("SQLite database connected successfully")
 
 	return store
 }
