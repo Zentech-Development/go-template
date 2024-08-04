@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Zentech-Development/go-template/pkg/entities"
+	"github.com/Zentech-Development/go-template/pkg/logger"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +29,10 @@ func (b *HTTPServer) handleLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user"})
+
+	logger.L.Info().Interface("account", account).Msg("Account authenticated")
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated account", "account": account})
 }
 
 func (b *HTTPServer) handleLogout(c *gin.Context) {
@@ -43,6 +47,7 @@ func (b *HTTPServer) handleLogout(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
 
@@ -66,7 +71,10 @@ func (b *HTTPServer) handleRegister(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully created user"})
+
+	logger.L.Info().Interface("account", account).Msg("Account created")
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully created account", "account": account})
 }
 
 func (b *HTTPServer) handleAuthMe(c *gin.Context) {
@@ -78,5 +86,5 @@ func (b *HTTPServer) handleAuthMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"account": account})
+	c.JSON(http.StatusOK, gin.H{"message": "Account is logged in", "account": account})
 }
